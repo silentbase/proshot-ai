@@ -78,7 +78,7 @@ export default function CookiePolicyPage() {
                         </p>
                         <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
                             <li>Löschen Sie Ihre Browser-Cookies in den Browser-Einstellungen</li>
-                            <li>Verwenden Sie den "Nur erforderliche"-Button im Cookie-Banner</li>
+                            <li>Verwenden Sie den &quot;Nur erforderliche&quot;-Button im Cookie-Banner</li>
                             <li>Blockieren Sie Cookies in Ihren Browser-Einstellungen (kann die Funktionalität beeinträchtigen)</li>
                         </ul>
                     </section>

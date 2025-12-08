@@ -20,8 +20,8 @@ export default function AGBPage() {
                     <h2 className="text-2xl font-semibold mb-4">§1 Geltungsbereich</h2>
                     <p className="text-muted-foreground">
                         Diese Allgemeinen Geschäftsbedingungen gelten für alle Verträge, Nutzungen und
-                        Geschäftsbeziehungen zwischen ProShot AI (nachfolgend "Anbieter") und den Nutzern der
-                        Plattform proshotai.app (nachfolgend "Nutzer").
+                        Geschäftsbeziehungen zwischen ProShot AI (nachfolgend &quot;Anbieter&quot;) und den Nutzern der
+                        Plattform proshotai.app (nachfolgend &quot;Nutzer&quot;).
                     </p>
                 </section>
 
