@@ -1,0 +1,11 @@
+{
+  "version": "3",
+  "remote": {
+    "https://deno.land/std@0.168.0/http/server.ts": "e99c1bee8a3f6571ee4cdeb2966efad465b8f6fe62bec1bdb59c1f007cc4d155"
+  },
+  "workspace": {
+    "dependencies": [
+      "npm:@fal-ai/client@latest"
+    ]
+  }
+}

@@ -14,13 +14,6 @@ export default function ProviderSigninBlock() {
                         </Button>
                     </form>
                 )}
-                {isGithubEnabled && (
-                    <form action={signInWithGithub} className="basis-full">
-                        <Button variant="outline" aria-label="Sign in with Github" className="w-full">
-                            <FaGithub />
-                        </Button>
-                    </form>
-                )}
             </div>
         </>
     )

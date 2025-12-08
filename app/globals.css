@@ -2,61 +2,268 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-  }
+:root {
+  /* Always the same, regardless of dark or light mode */
+  --background-dark: 225 20% 10%;
+  --foreground-light: 224 71% 4%;
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-  }
+  /* Modern light theme colors */
+  --background: 240 30% 99%;
+  --foreground: 224 71% 4%;
+  
+  /* Card with slight elevation */
+  --card: 0 0% 100%;
+  --card-foreground: 224 71% 4%;
+  
+  /* Popover/dropdown styling */
+  --popover: 0 0% 100%;
+  --popover-foreground: 224 71% 4%;
+  
+  /* Purple brand color */
+  --primary: rgb(146, 95, 241);
+  --primary-foreground: 0 0% 100%;
+  
+  /* Subtle secondary actions */
+  --secondary: 240 10% 97%;
+  --secondary-foreground: 224 71% 4%;
+  
+  /* Muted elements like backgrounds, disabled items */
+  --muted: 240 10% 97%;
+  --muted-foreground: 240 4% 46%;
+  
+  /* Purple-tinted accent for highlights */
+  --accent: 261 84% 95%;
+  --accent-foreground: 261 84% 40%;
+  
+  /* Error states */
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  --global-gray: 210 28% 90%;
+  --global-white: 0, 0%, 100%;
+  
+  /* Subtle borders */
+  --border: 240 6% 90%;
+  --input: 240 6% 90%;
+  --ring: 261 84% 66%;
+  
+  /* Modern rounded corners */
+  --radius: 0.6rem;
+
+  /* Standart container padding*/
+  --container-padding: 2.5rem;
+}
+
+.dark {
+  /* Modern dark theme colors */
+  --background: 225 20% 10%;
+  --foreground: 210 20% 98%;
+  
+  /* Card with slight elevation in dark mode */
+  --card: 225 25% 14%;
+  --card-foreground: 210 20% 98%;
+  
+  /* Popover/dropdown styling */
+  --popover: 225 25% 14%;
+  --popover-foreground: 210 20% 98%;
+  
+  /* Vibrant purple for dark mode */
+  --primary: 261 84% 70%;
+  --primary-foreground: 210 20% 98%;
+  
+  /* Subtle secondary actions for dark mode */
+  --secondary: 225 25% 16%;
+  --secondary-foreground: 210 20% 98%;
+  
+  /* Muted elements for dark mode */
+  --muted: 225 25% 16%;
+  --muted-foreground: 217 10% 70%;
+  
+  /* Purple-tinted accent for dark mode */
+  --accent: 261 84% 22%;
+  --accent-foreground: 261 84% 80%;
+  
+  /* Error states for dark mode */
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 20% 98%;
+  
+  /* Subtle borders for dark mode */
+  --border: 225 25% 20%;
+  --input: 225 25% 20%;
+  --ring: 261 84% 70%;
+}
+
+/* Update your theme classes to include accent colors that match each theme */
+
+/* Theme color options */
+.theme-soft-red {
+  --primary: 1 70% 67%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 1 70% 67%;
+  --accent: 1 70% 95%;
+  --accent-foreground: 1 70% 40%;
+}
+
+.theme-purple {
+  --primary: 261 84% 66%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 261 84% 66%;
+  --accent: 261 84% 95%;
+  --accent-foreground: 261 84% 40%;
+}
+
+.theme-blue {
+  --primary: 206 97% 53%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 206 97% 53%;
+  --accent: 206 97% 95%;
+  --accent-foreground: 206 97% 40%;
+}
+
+.theme-green {
+  --primary: 151 64% 53%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 151 64% 53%;
+  --accent: 151 64% 95%;
+  --accent-foreground: 151 64% 40%;
+}
+
+.theme-emerald {
+  --primary: 160 84% 39%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 160 84% 39%;
+  --accent: 160 84% 95%;
+  --accent-foreground: 160 84% 40%;
+}
+
+.theme-cyan {
+  --primary: 187 95% 53%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 187 95% 53%;
+  --accent: 187 95% 95%;
+  --accent-foreground: 187 95% 40%;
+}
+
+.theme-red {
+  --primary: 0 91% 60%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 0 91% 60%;
+  --accent: 0 91% 95%;
+  --accent-foreground: 0 91% 40%;
+}
+
+/* Add this section after your .theme-* classes */
+
+/* Dark mode theme variants */
+.dark .theme-soft-red {
+  --primary: 1 70% 67%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 1 70% 67%;
+  --accent: 1 70% 30%;
+  --accent-foreground: 1 70% 80%;
+}
+
+.dark .theme-purple {
+  --primary: 261 84% 70%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 261 84% 70%;
+  --accent: 261 84% 25%;
+  --accent-foreground: 261 84% 80%;
+}
+
+.dark .theme-blue {
+  --primary: 206 97% 65%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 206 97% 65%;
+  --accent: 206 97% 25%;
+  --accent-foreground: 206 97% 80%;
+}
+
+.dark .theme-green {
+  --primary: 151 64% 60%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 151 64% 60%;
+  --accent: 151 64% 20%;
+  --accent-foreground: 151 64% 80%;
+}
+
+.dark .theme-emerald {
+  --primary: 160 84% 45%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 160 84% 45%;
+  --accent: 160 84% 20%;
+  --accent-foreground: 160 84% 80%;
+}
+
+.dark .theme-cyan {
+  --primary: 187 95% 60%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 187 95% 60%;
+  --accent: 187 95% 25%;
+  --accent-foreground: 187 95% 80%;
+}
+
+.dark .theme-red {
+  --primary: 0 91% 65%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 0 91% 65%;
+  --accent: 0 91% 25%;
+  --accent-foreground: 0 91% 80%;
+}
+/* Modern card style with subtle shadow */
+.card-elegant {
+  @apply bg-card rounded-lg overflow-hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  border: none;
+}
+
+/* Hover effect for cards */
+.hover-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.hover-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Gradient backgrounds using the palette colors */
+.gradient-soft-red {
+  background: linear-gradient(135deg, #e8706e, #b6b5b5);
+}
+
+.gradient-purple {
+  background: linear-gradient(135deg, #8c60f3, #8e8a9c);
+}
+
+.gradient-blue {
+  background: linear-gradient(135deg, #1297fd, #8bcaf9);
+}
+
+.gradient-green {
+  background: linear-gradient(135deg, #51bc8f, #aeb2b9);
+}
+
+.gradient-emerald {
+  background: linear-gradient(135deg, #10B981, #34D399);
+}
+
+.gradient-cyan {
+  background: linear-gradient(135deg, #22D3EE, #67E8F9);
+}
+
+.gradient-red {
+  background: linear-gradient(135deg, #EF4444, #F87171);
+}
+
+/* Soft focus states */
+*:focus-visible {
+  @apply outline-none ring-2 ring-primary/40 ring-offset-0;
+}
+
+/* Remove focus ring from tips/info icon */
+.tips-icon:focus-visible {
+  @apply outline-none ring-0 ring-offset-0;
 }
 
 @layer base {
@@ -67,3 +274,95 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Improved container with consistent padding */
+.container-padded {
+  @apply container mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* Add this to your existing CSS file */
+
+/* Animated underline for navigation */
+.nav-link {
+  position: relative;
+  display: inline-block;
+  padding: 0.5rem 0;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: hsl(var(--primary));
+  transition: width 0.3s ease;
+  transform-origin: left;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 100%;
+}
+
+/* Optional - make text subtly darker on hover instead of changing color */
+.nav-link:hover {
+  color: hsl(var(--foreground));
+}
+
+.container-padding{
+  padding: var(--container-padding);
+}
+
+.container-top-padding{
+  padding-top: var(--container-padding);
+}
+
+.container-bottom-padding{
+  padding-bottom: var(--container-padding);
+}
+
+.container-left-padding{
+  padding-left: var(--container-padding);
+}
+.container-right-padding{
+  padding-right: var(--container-padding);
+}
+
+/* Button Animations*/
+
+.shimmer-on-hover {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-on-hover::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(255,255,255,0.5) 50%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.shimmer-on-hover:hover::after {
+  opacity: 1;
+  animation: shimmer-move 0.9s linear;
+}
+
+@keyframes shimmer-move {
+  0% { left: -75%; }
+  100% { left: 130%; }
+}
+

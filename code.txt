@@ -1,0 +1,1285 @@
+//DashboardUI
+'use client'
+import { useRef, useState } from 'react';
+//import { useAuth } from '@/hooks/useAuth';
+//import { supabase } from '@/integrations/supabase/client';
+
+//import { SidebarProvider } from '@/components/ui/sidebar';
+//import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+//import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
+import { ImageDropZone } from '@/components/dashboard/ImageDropZone';
+import { ReferenceImageSelector } from '@/components/dashboard/ReferenceImageSelector';
+import { PromptInput } from '@/components/dashboard/PromptInput';
+import { ActionBar } from '@/components/dashboard/ActionBar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { createClient } from '@/utils/supabase/client';
+import { toast, Toaster } from '../ui/sonner';
+import { sign } from 'node:crypto';
+import { FunctionsHttpError } from '@supabase/supabase-js';
+import { CheckCircle, CircleAlert, Download } from 'lucide-react';
+import ImageDownloadWrapper from './ImageDownloadWrapper';
+import { useSupabase } from '@/hooks/useSupabase';
+
+interface ProjectData {
+    id: string;
+    original_image_url: string | null;
+    reference_image_url: string | null;
+    text_prompt: string | null;
+    background_image_url: string | null;
+    //status: 'draft' | 'processing' | 'completed' | 'failed';
+    created_at: string;
+    updated_at: string;
+    user_id: string;
+}
+
+interface GeneratedImageData {
+    id: string;
+    image_url: string;
+    prompt_used: string;
+    created_at: string;
+}
+
+export default function DashboardUI({ authUser }: any) {
+    const supabase = createClient()
+
+    const [projectData, setProjectData] = useState({
+        title: '',
+        original_image_url: null as string | null,
+        reference_image_url: null as string | null,
+        text_prompt: '',
+    });
+
+    const [imageResults, setImageResults] = useState<GeneratedImageData[]>([]);
+    const [generationStatus, setGenerationStatus] = useState<"ready" | "generating" | "completed" | "error">("ready");
+    const [isUploading, setIsUploading] = useState(false);
+
+    const referenceFilesMap = useRef<{ [url: string]: File }>({});
+
+    const referenceFile = useRef<File | null>(null);
+    const productFile = useRef<File | null>(null);
+
+    type ErrorKeys = "inputPrompt" | "productImage" | "referenceImage"
+
+    const [errors, setErrors] = useState<Record<ErrorKeys, string | null>>({
+        inputPrompt: null,
+        productImage: null,
+        referenceImage: null
+    });
+
+    const loadGeneratedImages = async (projectId: string) => {
+        /* try {
+             const { data, error } = await supabase
+                 .from('generated_images')
+                 .select('*')
+                 .eq('project_id', projectId)
+                 .order('created_at', { ascending: false });
+ 
+             if (error) {
+                 console.error('Database error:', error);
+                 toast.error('Failed to load generated images');
+                 return;
+             }
+ 
+             setImageResults(data || []);
+         } catch (err) {
+             console.error('Exception loading images:', err);
+             toast.error('Failed to load generated images');
+         }*/
+    };
+
+    const uploadImageFile = async (file: File) => {
+
+        try {
+            const objectUrl = URL.createObjectURL(file);
+            // Default to product file; for reference we will override in the caller
+            //setProductFile(file);
+
+            return objectUrl;
+        } catch (err) {
+            console.error('Preview error:', err);
+            toast.error('Failed to prepare image preview');
+            return null;
+        }
+    };
+
+    const saveProject = async () => {
+        /*if (!projectData.title?.trim()) {
+            toast.error('Please provide a project title');
+            return null;
+        }
+
+        // Validate inputs
+        const hasProductImage = Boolean(projectData.original_image_url);
+        const hasReferenceImage = Boolean(projectData.reference_image_url);
+        const hasTextPrompt = Boolean(projectData.background_prompt?.trim());
+
+        if (!hasProductImage && !hasReferenceImage && !hasTextPrompt) {
+            toast.error('Please provide at least a product image, reference image, or text prompt');
+            return null;
+        }
+
+        try {
+            // For anonymous users, use a temporary user ID or skip user_id requirement
+            const userId = authUser.user?.id || `anonymous_${Date.now()}`;
+
+            const { data, error } = await supabase
+                .from('projects')
+                .insert({
+                    title: projectData.title,
+                    original_image_url: projectData.original_image_url,
+                    background_prompt: projectData.background_prompt || null,
+                    reference_image_url: projectData.reference_image_url,
+                    user_id: userId
+                })
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Database error:', error);
+                toast.error('Failed to create project');
+                return null;
+            }
+
+            toast.success('Project created successfully!');
+            return data as ProjectData;
+        } catch (err) {
+            console.error('Exception creating project:', err);
+            toast.error('Failed to create project');
+            return null;
+        }*/
+        return 'tempString'
+    };
+
+    function toBase64(file: File): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader()
+            reader.readAsDataURL(file) // encodes as base64 with data:image/... prefix
+            reader.onload = () => resolve(reader.result as string)
+            reader.onerror = error => reject(error)
+        })
+    }
+
+    const imageGenerationApi = async (images: File[],
+        text_prompt: string) => {
+
+        var input_images: string[] = [];
+        for (const image of images) {
+            if (image) {
+                const base64 = await toBase64(image);
+                input_images.push(base64);
+            }
+        }
+
+        const { data, error } = await supabase.functions.invoke('ai-generation', {
+            body: {
+                input_images: input_images,
+                text_prompt: text_prompt
+            }
+        });
+
+        if (error && error instanceof FunctionsHttpError) {
+            const errorMessage = await error.context.json()
+
+            if (errorMessage.error.status == 413) {
+                toast.error('Image exceeds the maximum allowed size.')
+                return
+            }
+
+            toast.error('Something went wrong. Please try again later.')
+            console.log('Function returned an error', errorMessage)
+        }
+
+        if (error) {
+            throw new Error(error);
+        }
+
+        console.log("RESPONSE: " + data)
+        return data
+    }
+
+    const startGeneration = async () => {
+
+        if (checkForErrors()) {
+            setGenerationStatus("error");
+            return;
+        }
+
+        //new code generated 10.09
+        setGenerationStatus("generating");
+
+        /* const project = await saveProject();
+         if (!project) {
+             setGenerationStatus("error");
+             console.log('saveProject Error!!')
+             return;
+         }*/
+
+        try {
+            setIsUploading(true);
+            const userId = authUser?.id
+
+            let originalPath: string | null = null;
+            let referencePath: string | null = null;
+            let signedOriginalUrl = '';
+            let signedReferenceUrl = '';
+
+            // Upload product image if present //
+            console.log("undefined???: " + productFile.current)
+
+            if (productFile.current) {
+                const fileName = `${userId}/${Date.now()}_${productFile.current?.name}`;
+                const { error: uploadErr1 } = await supabase.storage
+                    .from('product-images')
+                    .upload(fileName, productFile.current!);
+
+                if (uploadErr1) throw uploadErr1;
+                //save this path to original_image_url in user_generations
+                originalPath = fileName;
+                const { data: signed1, error: signErr1 } = await supabase.storage
+                    .from('product-images')
+                    .createSignedUrl(fileName, 60 * 60);
+
+                if (signErr1) throw signErr1;
+                signedOriginalUrl = signed1.signedUrl;
+
+            } else if (projectData.original_image_url) {
+                signedOriginalUrl = projectData.original_image_url;
+            }
+
+            // Upload reference image if present //
+            console.log("undefined???: " + referenceFile.current)
+
+            if (referenceFile.current) {
+                console.log("undefined???: " + referenceFile.current)
+                const refName = `${userId}/${Date.now()}_${referenceFile.current?.name}`;
+
+                const { error: uploadErr2 } = await supabase.storage
+                    .from('reference-images')
+                    .upload(refName, referenceFile.current!);
+
+                if (uploadErr2) throw uploadErr2;
+                referencePath = refName;
+                const { data: signed2, error: signErr2 } = await supabase.storage
+                    .from('reference-images')
+                    .createSignedUrl(refName, 60 * 60);
+
+                if (signErr2) throw signErr2;
+                signedReferenceUrl = signed2.signedUrl;
+
+            } else if (projectData.reference_image_url) {
+                signedReferenceUrl = projectData.reference_image_url;
+            }
+
+
+            //Call image-generation API
+            /*const generationResponse = await imageGenerationApi([productFile.current!, referenceFile.current!],
+                projectData.text_prompt);*/
+
+            // Extract the image URL from the response
+            const generated_image_url = ' http://127.0.0.1:54321/storage/v1/object/sign/generated-images/262bc9ac-06f1-49bf-9142-cb7caf33050d/1759415684341_7c1c08eb-c441-4c3e-ab03-575154181367?token=eyJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJnZW5lcmF0ZWQtaW1hZ2VzLzI2MmJjOWFjLTA2ZjEtNDliZi05MTQyLWNiN2NhZjMzMDUwZC8xNzU5NDE1Njg0MzQxXzdjMWMwOGViLWM0NDEtNGMzZS1hYjAzLTU3NTE1NDE4MTM2NyIsImlhdCI6MTc1OTQyMDk4MywiZXhwIjoxNzU5NDI0NTgzfQ.fERJZZM2DRG7Y5JPtKC3kBvfwrYzVO0M2EV5GqFqtw8'
+            //generationResponse;
+
+
+            const generatedImagePath = await saveGeneratedImage(generated_image_url)
+
+            console.log("GENERATED-IMAGE: " + generatedImagePath)
+            const { data: signedUrl, error: signErr } = await supabase.storage
+                .from('generated-images')
+                .createSignedUrl(generatedImagePath, 60 * 60);
+
+            if (signErr) throw signErr;
+
+            // Track this generation in our table
+            const { data: trackingRow, error: trackErr } = await supabase
+                .from('user_generations')
+                .insert({
+                    user_id: userId,
+                    //title: projectData.title,
+                    original_image_path: originalPath ?? null,
+                    reference_image_path: referencePath ?? null,
+                    text_prompt: projectData.text_prompt || null,
+                    generated_image_path: generatedImagePath
+                })
+                .select()
+                .single();
+            console.log(trackingRow)
+
+            if (trackErr) {
+                console.error('user_generations insert error:', trackErr);
+            }
+
+            const generatedImageSignedUrl = signedUrl.signedUrl //'https://storage.googleapis.com/falserverless/example_inputs/nano-banana-edit-input.png'
+            setImageResults([{
+                id: "1", created_at: "a", image_url: generatedImageSignedUrl
+                , prompt_used: "randon prmopt"
+            }])
+
+            setIsUploading(false);
+
+
+
+            /* await supabase
+                 .from('projects')
+                 .update({ status: 'completed' })
+                 .eq('id', project.id);*/
+
+            setGenerationStatus("completed");
+            //toast.success('Images generated successfully!');
+            //await loadGeneratedImages(project.id);
+
+            // Update tracking with the latest generated image
+            /*  if (trackingRow?.id) {
+                  const { data: latest, error: imgErr } = await supabase
+                      .from('generated_images')
+                      .select('*')
+                      .eq('project_id', project.id)
+                      .order('created_at', { ascending: false })
+                      .limit(1)
+                      .maybeSingle();
+  
+                  if (!imgErr && latest) {
+                      await supabase
+                          .from('user_generations')
+                          .update({
+                              generated_image_url: latest.image_url,
+                              status: 'completed'
+                          })
+                          .eq('id', trackingRow.id);
+                  }
+              }*/
+
+        } catch (error) {
+            console.error('Generation error:', error);
+            setGenerationStatus('error')
+            /*  await supabase
+                  .from('projects')
+                  .update({ status: 'failed' })
+                  .eq('id', project.id);/*
+  
+              setGenerationStatus("error");
+              //toast.error('Failed to generate images. Please try again.');
+          } finally {
+              setIsUploading(false);
+          }*/
+        };
+    }
+
+    const saveGeneratedImage = async (generatedImageUrl: string) => {
+        // 1. Fetch the generated image from fal.ai
+        const userId = authUser?.id
+
+        const fileName = `${userId}/${Date.now()}_${productFile.current?.name}`;
+
+        const response = await fetch(generatedImageUrl)
+        const blob = await response.blob()
+
+        // 2. Upload to Supabase Storage
+        const filePath = `${userId}/${Date.now()}_${crypto.randomUUID()}`
+
+        const { data, error } = await supabase.storage
+            .from("generated-images")
+            .upload(filePath, blob)
+
+        if (error) throw error
+
+        console.log("Stored at:", data.path)
+        return data.path
+
+    }
+
+
+
+    const canStartGeneration = Boolean(
+        projectData.title?.trim() &&
+        (projectData.original_image_url ||
+            projectData.reference_image_url ||
+            projectData.text_prompt?.trim())
+    );
+
+    const hasGeneratedResults = imageResults.length > 0;
+
+    const checkForErrors = () => {
+
+        var isError = false
+
+        setErrors(prev => ({ ...prev, inputPrompt: null, productImage: null, referenceImage: null }));
+
+        if (projectData.text_prompt.length < 5) {
+            setErrors(prev => ({ ...prev, inputPrompt: "Prompt must be at least 5 characters long." }));
+            isError = true
+        }
+        if (!projectData.text_prompt.length) {
+            setErrors(prev => ({ ...prev, inputPrompt: "Please add a Prompt." }));
+            isError = true
+        }
+        if (!projectData.original_image_url) {
+            setErrors(prev => ({ ...prev, productImage: "Please upload a product image." }));
+            isError = true
+
+        }
+
+        return isError
+
+        /*
+        
+         switch (true) {
+            case !projectData.text_prompt.length:
+                setErrors(prev => ({ ...prev, inputPrompt: "Please add a Prompt." }));
+
+
+            case projectData.text_prompt.length < 5:
+                setErrors(prev => ({ ...prev, inputPrompt: "Prompt must be at least 5 characters long." }));
+
+
+            case !projectData.original_image_url:
+                setErrors(prev => ({ ...prev, productImage: "Please upload a product image." }));
+                break;
+
+            default:
+                break;
+        }
+        */
+    }
+
+
+    return (
+        <main>
+            <Toaster />
+            <div className="min-h-screen w-full bg-muted/30">
+                <div className="flex w-full">
+                    <div className="flex-1 flex">
+                        <main className="flex-1 flex flex-col">
+                            <div className="flex-1 p-6">
+                                <div className="max-w-4xl mx-auto space-y-6">
+                                    {/* Project Title */}
+                                    {/*<Card className="card-elegant">
+                                        <CardHeader>
+                                            <CardTitle>Project Setup</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-foreground">Project Title</label>
+                                                <input
+                                                    type="text"
+                                                    value={projectData.title}
+                                                    onChange={(e) => setProjectData(prev => ({ ...prev, title: e.target.value }))}
+                                                    placeholder="Enter project title..."
+                                                    className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                                    disabled={generationStatus === "generating"}
+                                                />
+                                            </div>
+                                        </CardContent>
+                                    </Card> */}
+
+                                    {/* Product Image Upload */}
+                                    <Card className="card-elegant">
+                                        <CardHeader>
+                                            <CardTitle>Product Image</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+
+                                            <ImageDropZone
+                                                onImageUpload={async (file) => {
+                                                    //const url = await uploadImageFile(file);
+                                                    const url = URL.createObjectURL(file)
+                                                    if (url) {
+                                                        setProjectData(prev => ({ ...prev, original_image_url: url }));
+                                                        productFile.current = file
+                                                    }
+                                                    return url;
+                                                }}
+                                                uploadedImageUrl={projectData.original_image_url}
+                                                onImageRemove={() => {
+                                                    setProjectData(prev => ({ ...prev, original_image_url: null }));
+                                                    productFile.current = null
+                                                }}
+                                                disabled={generationStatus === "generating"}
+                                                errorMsg={errors.productImage}
+                                            />
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* Reference Image Selection */}
+                                    <Card className="card-elegant">
+                                        <CardHeader>
+                                            <CardTitle>Reference Style</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+
+                                            <ReferenceImageSelector
+                                                onImageUpload={async (file) => {
+                                                    console.log("+++++++++" + file)
+                                                    const url = URL.createObjectURL(file);
+                                                    //setReferenceFilesMap(prev => ({ ...prev, [url]: file }));
+                                                    referenceFilesMap.current[url] = file;
+                                                    referenceFile.current = file; // Optionally set the latest uploaded file
+                                                    console.log("1....:" + referenceFile.current)
+
+                                                    return url;
+                                                }}
+                                                onImageSelect={(url) => {
+                                                    setProjectData(prev => ({ ...prev, reference_image_url: url }));
+                                                    console.log("2....:" + referenceFile.current)
+
+                                                    if (!url) {
+                                                        referenceFile.current = null;
+                                                    } else {
+                                                        referenceFile.current = referenceFilesMap.current[url] || null;
+                                                        console.log("---------!!----")
+                                                    }
+                                                    console.log("3....:" + referenceFile.current)
+
+                                                }}
+                                                selectedImageUrl={projectData.reference_image_url}
+                                                disabled={generationStatus === "generating"}
+                                            />
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* Prompt Input */}
+                                    <Card className="card-elegant">
+                                        <CardHeader>
+                                            <CardTitle>Background Description</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <PromptInput
+                                                value={projectData.text_prompt || ''}
+                                                onChange={(value) => setProjectData(prev => ({ ...prev, text_prompt: value }))}
+                                                placeholder="Describe the background and style you want for your product..."
+                                                disabled={generationStatus === "generating"}
+                                                errorMsg={errors.inputPrompt}
+                                            />
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* Generated Images Results */}
+                                    {true && (
+                                        <Card className="card-elegant">
+                                            <CardHeader>
+                                                <CardTitle>Generated Images</CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="grid grid-cols-1 md:grid-cols-2  gap-6"> {/*md:grid-cols-2 lg:grid-cols-3*/}
+                                                    {imageResults.map((image) => (
+                                                        <ImageDownloadWrapper
+
+                                                            imageUrl={image.image_url}
+                                                            imageName={`generated_${image.id}.webp`}
+                                                            key={image.id}
+
+                                                        >
+                                                            <div className="relative bg-muted rounded-lg aspect-square overflow-hidden group"> {/* aspect-square */}
+                                                                <img
+                                                                    src={image.image_url}
+                                                                    alt="Generated product image"
+                                                                    className="w-full h-full object-cover"
+                                                                />
+                                                                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-50 transition">
+                                                                    <span className="text-white text-lg font-semibold opacity-0 group-hover:opacity-100 transition">
+                                                                        <Download />
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <p className="text-sm text-muted-foreground">
+                                                                    {/* Additional info if needed */}
+                                                                </p>
+                                                            </div>
+                                                        </ImageDownloadWrapper>
+                                                    ))}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Action Bar */}
+                            <ActionBar
+                                status={generationStatus}
+                                onGenerate={startGeneration}
+                                onExport={() => {
+                                    if (imageResults.length > 0) {
+                                        imageResults.forEach((image) => {
+                                            //downloadImageFile(image.image_url, `generated_${image.id}.webp`);
+                                        });
+                                    }
+                                }}
+                                canGenerate={true}
+                                hasResults={true}
+                            />
+                        </main>
+
+                        {/* Right Panel */}
+                        <div className="hidden xl:block w-80 p-6 border-l border-border bg-card/30">
+                            <Card className="card-elegant">
+                                <CardHeader>
+                                    <CardTitle className="text-sm">Tips</CardTitle>
+                                </CardHeader>
+                                <CardContent className="text-sm text-muted-foreground space-y-2">
+                                    <p>• Upload a clear product image for best results</p>
+                                    <p>• Use reference images to guide the style</p>
+                                    <p>• Be specific in your text descriptions</p>
+                                    <p>• Try different combinations for variety</p>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    )
+}
+
+
+
+///////////////////DashboardUI
+'use client'
+import { useRef, useState } from 'react';
+//import { useAuth } from '@/hooks/useAuth';
+//import { supabase } from '@/integrations/supabase/client';
+
+//import { SidebarProvider } from '@/components/ui/sidebar';
+//import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+//import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
+import { ImageDropZone } from '@/components/dashboard/ImageDropZone';
+import { ReferenceImageSelector } from '@/components/dashboard/ReferenceImageSelector';
+import { PromptInput } from '@/components/dashboard/PromptInput';
+import { ActionBar } from '@/components/dashboard/ActionBar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { createClient } from '@/utils/supabase/client';
+import { toast, Toaster } from '../ui/sonner';
+import { sign } from 'node:crypto';
+import { FunctionsHttpError } from '@supabase/supabase-js';
+import { CheckCircle, CircleAlert, Download } from 'lucide-react';
+import ImageDownloadWrapper from './ImageDownloadWrapper';
+import { useSupabase } from '@/hooks/useSupabase';
+
+interface ProjectData {
+    id: string;
+    original_image_url: string | null;
+    reference_image_url: string | null;
+    text_prompt: string | null;
+    background_image_url: string | null;
+    //status: 'draft' | 'processing' | 'completed' | 'failed';
+    created_at: string;
+    updated_at: string;
+    user_id: string;
+}
+
+interface GeneratedImageData {
+    id: string;
+    image_url: string;
+    prompt_used: string;
+    created_at: string;
+}
+
+export default function DashboardUI({ authUser }: any) {
+    const supabase = createClient()
+
+    const [projectData, setProjectData] = useState({
+        title: '',
+        original_image_url: null as string | null,
+        reference_image_urls: [] as string[], // Changed from reference_image_url to reference_image_urls array
+        text_prompt: '',
+    });
+
+    const [imageResults, setImageResults] = useState<GeneratedImageData[]>([]);
+    const [generationStatus, setGenerationStatus] = useState<"ready" | "generating" | "completed" | "error">("ready");
+    const [isUploading, setIsUploading] = useState(false);
+
+    const referenceFilesMap = useRef<{ [url: string]: File }>({});
+
+    const referenceFiles = useRef<File[]>([]); // Changed from referenceFile to referenceFiles array
+    const productFile = useRef<File | null>(null);
+
+    type ErrorKeys = "inputPrompt" | "productImage" | "referenceImage"
+
+    const [errors, setErrors] = useState<Record<ErrorKeys, string | null>>({
+        inputPrompt: null,
+        productImage: null,
+        referenceImage: null
+    });
+
+    const loadGeneratedImages = async (projectId: string) => {
+        /* try {
+             const { data, error } = await supabase
+                 .from('generated_images')
+                 .select('*')
+                 .eq('project_id', projectId)
+                 .order('created_at', { ascending: false });
+ 
+             if (error) {
+                 console.error('Database error:', error);
+                 toast.error('Failed to load generated images');
+                 return;
+             }
+ 
+             setImageResults(data || []);
+         } catch (err) {
+             console.error('Exception loading images:', err);
+             toast.error('Failed to load generated images');
+         }*/
+    };
+
+    const uploadImageFile = async (file: File) => {
+
+        try {
+            const objectUrl = URL.createObjectURL(file);
+            // Default to product file; for reference we will override in the caller
+            //setProductFile(file);
+
+            return objectUrl;
+        } catch (err) {
+            console.error('Preview error:', err);
+            toast.error('Failed to prepare image preview');
+            return null;
+        }
+    };
+
+    const saveProject = async () => {
+        /*if (!projectData.title?.trim()) {
+            toast.error('Please provide a project title');
+            return null;
+        }
+
+        // Validate inputs
+        const hasProductImage = Boolean(projectData.original_image_url);
+        const hasReferenceImage = Boolean(projectData.reference_image_url);
+        const hasTextPrompt = Boolean(projectData.background_prompt?.trim());
+
+        if (!hasProductImage && !hasReferenceImage && !hasTextPrompt) {
+            toast.error('Please provide at least a product image, reference image, or text prompt');
+            return null;
+        }
+
+        try {
+            // For anonymous users, use a temporary user ID or skip user_id requirement
+            const userId = authUser.user?.id || `anonymous_${Date.now()}`;
+
+            const { data, error } = await supabase
+                .from('projects')
+                .insert({
+                    title: projectData.title,
+                    original_image_url: projectData.original_image_url,
+                    background_prompt: projectData.background_prompt || null,
+                    reference_image_url: projectData.reference_image_url,
+                    user_id: userId
+                })
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Database error:', error);
+                toast.error('Failed to create project');
+                return null;
+            }
+
+            toast.success('Project created successfully!');
+            return data as ProjectData;
+        } catch (err) {
+            console.error('Exception creating project:', err);
+            toast.error('Failed to create project');
+            return null;
+        }*/
+        return 'tempString'
+    };
+
+    function toBase64(file: File): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader()
+            reader.readAsDataURL(file) // encodes as base64 with data:image/... prefix
+            reader.onload = () => resolve(reader.result as string)
+            reader.onerror = error => reject(error)
+        })
+    }
+
+    const imageGenerationApi = async (images: File[],
+        text_prompt: string) => {
+
+        var input_images: string[] = [];
+        for (const image of images) {
+            if (image) {
+                const base64 = await toBase64(image);
+                input_images.push(base64);
+            }
+        }
+
+        const { data, error } = await supabase.functions.invoke('ai-generation', {
+            body: {
+                input_images: input_images,
+                text_prompt: text_prompt
+            }
+        });
+
+        if (error && error instanceof FunctionsHttpError) {
+            const errorMessage = await error.context.json()
+
+            if (errorMessage.error.status == 413) {
+                toast.error('Image exceeds the maximum allowed size.')
+                return
+            }
+
+            toast.error('Something went wrong. Please try again later.')
+            console.log('Function returned an error', errorMessage)
+        }
+
+        if (error) {
+            throw new Error(error);
+        }
+
+        console.log("RESPONSE: " + data)
+        return data
+    }
+
+    const startGeneration = async () => {
+
+        if (checkForErrors()) {
+            setGenerationStatus("error");
+            return;
+        }
+
+        //new code generated 10.09
+        setGenerationStatus("generating");
+
+        /* const project = await saveProject();
+         if (!project) {
+             setGenerationStatus("error");
+             console.log('saveProject Error!!')
+             return;
+         }*/
+
+        try {
+            setIsUploading(true);
+            const userId = authUser?.id
+
+            let originalPath: string | null = null;
+            let referencePath: string | null = null;
+            let signedOriginalUrl = '';
+            let signedReferenceUrl = [];
+
+            // Upload product image if present //
+            console.log("undefined???: " + productFile.current)
+
+            if (productFile.current) {
+                const fileName = `${userId}/${Date.now()}_${productFile.current?.name}`;
+                const { error: uploadErr1 } = await supabase.storage
+                    .from('product-images')
+                    .upload(fileName, productFile.current!);
+
+                if (uploadErr1) throw uploadErr1;
+                //save this path to original_image_url in user_generations
+                originalPath = fileName;
+                const { data: signed1, error: signErr1 } = await supabase.storage
+                    .from('product-images')
+                    .createSignedUrl(fileName, 60 * 60);
+
+                if (signErr1) throw signErr1;
+                signedOriginalUrl = signed1.signedUrl;
+
+            } else if (projectData.original_image_url) {
+                signedOriginalUrl = projectData.original_image_url;
+            }
+
+            // Upload reference image if present //
+            console.log("undefined???: " + referenceFiles.current)
+
+            const referenceUrls = [];
+            const referencePaths = [];
+
+            if (referenceFiles.current.length > 0) {
+                // Upload all reference images
+
+
+                for (const refFile of referenceFiles.current) {
+                    const refName = `${userId}/${Date.now()}_${refFile.name}`;
+
+                    const { error: uploadErr2 } = await supabase.storage
+                        .from('reference-images')
+                        .upload(refName, refFile);
+
+                    if (uploadErr2) throw uploadErr2;
+                    referencePaths.push(refName);
+
+                    const { data: signed2, error: signErr2 } = await supabase.storage
+                        .from('reference-images')
+                        .createSignedUrl(refName, 60 * 60);
+
+                    if (signErr2) throw signErr2;
+                    referenceUrls.push(signed2.signedUrl);
+                }
+
+                // Use these in your API call
+                // referencePaths for database storage
+                // referenceUrls for API calls
+            } else if (projectData.reference_image_urls) {
+                signedReferenceUrl = projectData.reference_image_urls;
+            }
+
+
+            //Call image-generation API
+            /*const generationResponse = await imageGenerationApi([productFile.current!, ...referenceFiles.current!],
+                projectData.text_prompt);*/
+
+            // Extract the image URL from the response
+            const generated_image_url = ' http://127.0.0.1:54321/storage/v1/object/sign/generated-images/262bc9ac-06f1-49bf-9142-cb7caf33050d/1759415684341_7c1c08eb-c441-4c3e-ab03-575154181367?token=eyJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJnZW5lcmF0ZWQtaW1hZ2VzLzI2MmJjOWFjLTA2ZjEtNDliZi05MTQyLWNiN2NhZjMzMDUwZC8xNzU5NDE1Njg0MzQxXzdjMWMwOGViLWM0NDEtNGMzZS1hYjAzLTU3NTE1NDE4MTM2NyIsImlhdCI6MTc1OTQyMDk4MywiZXhwIjoxNzU5NDI0NTgzfQ.fERJZZM2DRG7Y5JPtKC3kBvfwrYzVO0M2EV5GqFqtw8'
+            //generationResponse;
+
+
+            const generatedImagePath = await saveGeneratedImage(generated_image_url)
+
+            console.log("GENERATED-IMAGE: " + generatedImagePath)
+            const { data: signedUrl, error: signErr } = await supabase.storage
+                .from('generated-images')
+                .createSignedUrl(generatedImagePath, 60 * 60);
+
+            if (signErr) throw signErr;
+
+            // Track this generation in our table
+            const { data: trackingRow, error: trackErr } = await supabase
+                .from('user_generations')
+                .insert({
+                    user_id: userId,
+                    //title: projectData.title,
+                    original_image_path: originalPath ?? null,
+                    //reference_image_path: referencePath ?? null,
+                    text_prompt: projectData.text_prompt || null,
+                    generated_image_path: generatedImagePath
+                })
+                .select()
+                .single();
+
+            //new approach
+            if (!trackErr && trackingRow) {
+                // Prepare batch insert for reference images
+                const referenceInserts = referencePaths.map(path => ({
+                    generation_id: trackingRow.id,
+                    image_path: path
+                }));
+
+                // Insert all reference images
+                const { error: refError } = await supabase
+                    .from('reference_images')
+                    .insert(referenceInserts);
+
+                if (refError) {
+                    console.error('Failed to save reference images:', refError);
+                }
+            }
+
+            if (trackErr) {
+                console.error('user_generations insert error:', trackErr);
+            }
+
+            const generatedImageSignedUrl = signedUrl.signedUrl //'https://storage.googleapis.com/falserverless/example_inputs/nano-banana-edit-input.png'
+            setImageResults([{
+                id: "1", created_at: "a", image_url: generatedImageSignedUrl
+                , prompt_used: "randon prmopt"
+            }])
+
+            setIsUploading(false);
+
+
+
+            /* await supabase
+                 .from('projects')
+                 .update({ status: 'completed' })
+                 .eq('id', project.id);*/
+
+            setGenerationStatus("completed");
+            //toast.success('Images generated successfully!');
+            //await loadGeneratedImages(project.id);
+
+            // Update tracking with the latest generated image
+            /*  if (trackingRow?.id) {
+                  const { data: latest, error: imgErr } = await supabase
+                      .from('generated_images')
+                      .select('*')
+                      .eq('project_id', project.id)
+                      .order('created_at', { ascending: false })
+                      .limit(1)
+                      .maybeSingle();
+  
+                  if (!imgErr && latest) {
+                      await supabase
+                          .from('user_generations')
+                          .update({
+                              generated_image_url: latest.image_url,
+                              status: 'completed'
+                          })
+                          .eq('id', trackingRow.id);
+                  }
+              }*/
+
+        } catch (error) {
+            console.error('Generation error:', error);
+            setGenerationStatus('error')
+            /*  await supabase
+                  .from('projects')
+                  .update({ status: 'failed' })
+                  .eq('id', project.id);/*
+  
+              setGenerationStatus("error");
+              //toast.error('Failed to generate images. Please try again.');
+          } finally {
+              setIsUploading(false);
+          }*/
+        };
+    }
+
+    const saveGeneratedImage = async (generatedImageUrl: string) => {
+        // 1. Fetch the generated image from fal.ai
+        const userId = authUser?.id
+
+        const fileName = `${userId}/${Date.now()}_${productFile.current?.name}`;
+
+        const response = await fetch(generatedImageUrl)
+        const blob = await response.blob()
+
+        // 2. Upload to Supabase Storage
+        const filePath = `${userId}/${Date.now()}_${crypto.randomUUID()}`
+
+        const { data, error } = await supabase.storage
+            .from("generated-images")
+            .upload(filePath, blob)
+
+        if (error) throw error
+
+        console.log("Stored at:", data.path)
+        return data.path
+
+    }
+
+
+
+    const canStartGeneration = Boolean(
+        projectData.title?.trim() &&
+        (projectData.original_image_url ||
+            projectData.reference_image_urls ||
+            projectData.text_prompt?.trim())
+    );
+
+    const hasGeneratedResults = imageResults.length > 0;
+
+    const checkForErrors = () => {
+
+        var isError = false
+
+        setErrors(prev => ({ ...prev, inputPrompt: null, productImage: null, referenceImage: null }));
+
+        if (projectData.text_prompt.length < 5) {
+            setErrors(prev => ({ ...prev, inputPrompt: "Prompt must be at least 5 characters long." }));
+            isError = true
+        }
+        if (!projectData.text_prompt.length) {
+            setErrors(prev => ({ ...prev, inputPrompt: "Please add a Prompt." }));
+            isError = true
+        }
+        if (!projectData.original_image_url) {
+            setErrors(prev => ({ ...prev, productImage: "Please upload a product image." }));
+            isError = true
+
+        }
+
+        return isError
+
+        /*
+        
+         switch (true) {
+            case !projectData.text_prompt.length:
+                setErrors(prev => ({ ...prev, inputPrompt: "Please add a Prompt." }));
+
+
+            case projectData.text_prompt.length < 5:
+                setErrors(prev => ({ ...prev, inputPrompt: "Prompt must be at least 5 characters long." }));
+
+
+            case !projectData.original_image_url:
+                setErrors(prev => ({ ...prev, productImage: "Please upload a product image." }));
+                break;
+
+            default:
+                break;
+        }
+        */
+    }
+
+
+    return (
+        <main>
+            <Toaster />
+            <div className="min-h-screen w-full bg-muted/30">
+                <div className="flex w-full">
+                    <div className="flex-1 flex">
+                        <main className="flex-1 flex flex-col">
+                            <div className="flex-1 p-6">
+                                <div className="max-w-4xl mx-auto space-y-6">
+                                    {/* Project Title */}
+                                    {/*<Card className="card-elegant">
+                                        <CardHeader>
+                                            <CardTitle>Project Setup</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-foreground">Project Title</label>
+                                                <input
+                                                    type="text"
+                                                    value={projectData.title}
+                                                    onChange={(e) => setProjectData(prev => ({ ...prev, title: e.target.value }))}
+                                                    placeholder="Enter project title..."
+                                                    className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                                    disabled={generationStatus === "generating"}
+                                                />
+                                            </div>
+                                        </CardContent>
+                                    </Card> */}
+
+                                    {/* Product Image Upload */}
+                                    <Card className="card-elegant">
+                                        <CardHeader>
+                                            <CardTitle>Product Image</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+
+                                            <ImageDropZone
+                                                onImageUpload={async (file) => {
+                                                    //const url = await uploadImageFile(file);
+                                                    const url = URL.createObjectURL(file)
+                                                    if (url) {
+                                                        setProjectData(prev => ({ ...prev, original_image_url: url }));
+                                                        productFile.current = file
+                                                    }
+                                                    return url;
+                                                }}
+                                                uploadedImageUrl={projectData.original_image_url}
+                                                onImageRemove={() => {
+                                                    setProjectData(prev => ({ ...prev, original_image_url: null }));
+                                                    productFile.current = null
+                                                }}
+                                                disabled={generationStatus === "generating"}
+                                                errorMsg={errors.productImage}
+                                            />
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* Reference Image Selection */}
+                                    <Card className="card-elegant">
+                                        <CardHeader>
+                                            <CardTitle>Reference Style</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+
+                                            <ReferenceImageSelector
+                                                onImageUpload={async (file) => {
+                                                    const url = URL.createObjectURL(file);
+                                                    referenceFilesMap.current[url] = file;
+                                                    return url;
+                                                }}
+                                                onImagesChange={(urls) => {
+                                                    setProjectData(prev => ({ ...prev, reference_image_urls: urls }));
+
+                                                    // Update reference files array based on selected URLs
+                                                    referenceFiles.current = urls.map(url => referenceFilesMap.current[url]).filter(Boolean);
+                                                }}
+                                                selectedImageUrls={projectData.reference_image_urls}
+                                                disabled={generationStatus === "generating"}
+                                            />
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* Prompt Input */}
+                                    <Card className="card-elegant">
+                                        <CardHeader>
+                                            <CardTitle>Background Description</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <PromptInput
+                                                value={projectData.text_prompt || ''}
+                                                onChange={(value) => setProjectData(prev => ({ ...prev, text_prompt: value }))}
+                                                placeholder="Describe the background and style you want for your product..."
+                                                disabled={generationStatus === "generating"}
+                                                errorMsg={errors.inputPrompt}
+                                            />
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* Generated Images Results */}
+                                    {true && (
+                                        <Card className="card-elegant">
+                                            <CardHeader>
+                                                <CardTitle>Generated Images</CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="grid grid-cols-1 md:grid-cols-2  gap-6"> {/*md:grid-cols-2 lg:grid-cols-3*/}
+                                                    {imageResults.map((image) => (
+                                                        <ImageDownloadWrapper
+
+                                                            imageUrl={image.image_url}
+                                                            imageName={`generated_${image.id}.webp`}
+                                                            key={image.id}
+
+                                                        >
+                                                            <div className="relative bg-muted rounded-lg aspect-square overflow-hidden group"> {/* aspect-square */}
+                                                                <img
+                                                                    src={image.image_url}
+                                                                    alt="Generated product image"
+                                                                    className="w-full h-full object-cover"
+                                                                />
+                                                                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-50 transition">
+                                                                    <span className="text-white text-lg font-semibold opacity-0 group-hover:opacity-100 transition">
+                                                                        <Download />
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <p className="text-sm text-muted-foreground">
+                                                                    {/* Additional info if needed */}
+                                                                </p>
+                                                            </div>
+                                                        </ImageDownloadWrapper>
+                                                    ))}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Action Bar */}
+                            <ActionBar
+                                status={generationStatus}
+                                onGenerate={startGeneration}
+                                onExport={() => {
+                                    if (imageResults.length > 0) {
+                                        imageResults.forEach((image) => {
+                                            //downloadImageFile(image.image_url, `generated_${image.id}.webp`);
+                                        });
+                                    }
+                                }}
+                                canGenerate={true}
+                                hasResults={true}
+                            />
+                        </main>
+
+                        {/* Right Panel */}
+                        <div className="hidden xl:block w-80 p-6 border-l border-border bg-card/30">
+                            <Card className="card-elegant">
+                                <CardHeader>
+                                    <CardTitle className="text-sm">Tips</CardTitle>
+                                </CardHeader>
+                                <CardContent className="text-sm text-muted-foreground space-y-2">
+                                    <p>• Upload a clear product image for best results</p>
+                                    <p>• Use reference images to guide the style</p>
+                                    <p>• Be specific in your text descriptions</p>
+                                    <p>• Try different combinations for variety</p>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    )
+}
+
+

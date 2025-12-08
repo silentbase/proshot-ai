@@ -1,27 +1,50 @@
 import StripePricingTable from "@/components/StripePricingTable";
 import Image from "next/image"
 import { createClient } from '@/utils/supabase/server'
-import { createStripeCheckoutSession } from "@/utils/stripe/api";
+import { createStripeCustomerSession, generateStripeBillingPortalLink } from "@/utils/stripe/api";
+import { db } from "@/utils/db/db";
+import { usersTable } from "@/utils/db/schema";
+import NextImage from 'next/image';
+import { eq } from "drizzle-orm";
+
+import { redirect } from "next/navigation"
+import { BillingPortalFlowType } from "@/utils/Enums";
+import CustomPricingTable from "@/components/CustomPricingTable";
+import CustomPricingTableTailwind from "@/components/CustomPricingTableTailWind";
+
 export default async function Subscribe() {
     const supabase = createClient()
     const {
         data: { user },
     } = await supabase.auth.getUser()
-    const checkoutSessionSecret = await createStripeCheckoutSession(user!.email!)
+
+    // if user already has a plan, redirect to customer portal
+    const checkUserInDB = await db.select().from(usersTable).where(eq(usersTable.email, user!.email!))
+
+    /*if (checkUserInDB[0].plan != 'none') {
+        var billingPortalLink = await generateStripeBillingPortalLink(user?.email!, BillingPortalFlowType.SubUpdate);
+        console.log(checkUserInDB)
+        redirect(billingPortalLink)
+    }*/
+    //----------------------------------------------------------
+
+    const customerSessionSecret = await createStripeCustomerSession(user!.email!)
 
     return (
         <div className="flex flex-col min-h-screen bg-secondary">
             <header className="px-4 lg:px-6 h-16 flex items-center  bg-white border-b fixed border-b-slate-200 w-full">
-                <Image src="/logo.png" alt="logo" width={50} height={50} />
+                <NextImage src="/logo.png" alt="logo" width={50} height={50} />
                 <span className="sr-only">Acme Inc</span>
             </header>
-            <div className="w-full py-20 lg:py-32 xl:py-40">
-                <div className="text-center py-6 md:py-10 lg:py-12 ">
-                    <h1 className="font-bold text-xl md:text-3xl lg:text-4xl ">Pricing</h1>
-                    <h1 className="pt-4 text-muted-foreground text-sm md:text-md lg:text-lg">Choose the right plan for your team! Cancel anytime!</h1>
+
+            <section className="w-full py-10 md:py-20 lg:py-32 bg-muted">
+                <div className="container px-4 md:px-6">
+                    <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-4">Pricing Plans</h2>
+                    <p className="text-muted-foreground text-center mb-8 md:text-xl">Choose the perfect plan for your needs</p>
+                    <CustomPricingTable></CustomPricingTable>
+                    <CustomPricingTableTailwind></CustomPricingTableTailwind>
                 </div>
-                <StripePricingTable checkoutSessionSecret={checkoutSessionSecret} />
-            </div>
+            </section>
         </div>
     )
 }

@@ -1,0 +1,5 @@
+{
+  "imports": {
+    "fal": "npm:@fal-ai/client@latest"
+  }
+}
