@@ -5,6 +5,7 @@ import { createStripeCustomer } from "@/utils/stripe/api";
 import { db } from "@/utils/db/db";
 import { usersTable } from "@/utils/db/schema";
 import { eq } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 
 export async function GET(request: Request) {
     const supabase = createClient();
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url);
     const code = searchParams.get("code");
     // if "next" is in param, use it as the redirect URL
-    const next = searchParams.get("next") ?? "/";
+    const next = searchParams.get("next") ?? "/dashboard";
 
     console.log("Callback called with code:", code ? "present" : "missing");
 
@@ -77,6 +78,10 @@ export async function GET(request: Request) {
             : `${origin}${next}`;
 
         console.log("Redirecting to:", redirectUrl);
+        
+        // Revalidate the dashboard layout to refresh auth state
+        revalidatePath("/dashboard", "layout");
+        
         return NextResponse.redirect(redirectUrl);
     }
 
