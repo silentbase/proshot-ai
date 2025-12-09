@@ -4,6 +4,13 @@
 
 [build.environment]
   SECRETS_SCAN_OMIT_PATHS = ".next/**"
+  NODE_VERSION = "20"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
