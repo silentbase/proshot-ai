@@ -1,14 +1,10 @@
-import StripePricingTable from "@/components/StripePricingTable";
-import Image from "next/image"
+
 import { createClient } from '@/utils/supabase/server'
 import { createStripeCustomerSession, generateStripeBillingPortalLink } from "@/utils/stripe/api";
 import { db } from "@/utils/db/db";
 import { usersTable } from "@/utils/db/schema";
 import NextImage from 'next/image';
 import { eq } from "drizzle-orm";
-
-import { redirect } from "next/navigation"
-import { BillingPortalFlowType } from "@/utils/Enums";
 import CustomPricingTable from "@/components/CustomPricingTable";
 import CustomPricingTableTailwind from "@/components/CustomPricingTableTailWind";
 

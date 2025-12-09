@@ -46,6 +46,7 @@ export async function GET(request: Request) {
             console.log("Creating new user in DB");
             try {
                 // create Stripe customers
+                console.log("Creating Stripe customer for:", user.email);
                 const stripeID = await createStripeCustomer(
                     user.id,
                     user.email!,
@@ -54,6 +55,7 @@ export async function GET(request: Request) {
                 console.log("Stripe customer created:", stripeID);
                 
                 // Create record in DB
+                console.log("Inserting user into database...");
                 const insertResult = await db.insert(usersTable).values({
                     id: user.id,
                     name: user.user_metadata.full_name ||
@@ -62,9 +64,17 @@ export async function GET(request: Request) {
                     stripe_id: stripeID,
                 });
                 console.log("User created successfully in DB", insertResult);
-            } catch (dbError) {
-                console.error("Error creating user in DB:", dbError);
-                console.error("Full error details:", JSON.stringify(dbError, null, 2));
+            } catch (dbError: any) {
+                console.error("ERROR in user creation process:");
+                console.error("Error message:", dbError.message);
+                console.error("Error type:", dbError.type);
+                console.error("Full error:", dbError);
+                
+                // Check if it's a Stripe error
+                if (dbError.type === 'StripeError' || dbError.message?.includes('Stripe')) {
+                    console.error("STRIPE ERROR DETECTED");
+                }
+                
                 // Don't continue - redirect to error page
                 return NextResponse.redirect(`${origin}/auth/error?reason=db_error`);
             }
