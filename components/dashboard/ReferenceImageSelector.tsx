@@ -30,7 +30,7 @@ export function ReferenceImageSelector({
 
         // Check if adding these files would exceed the maximum
         if (selectedImageUrls.length + e.target.files.length > MAX_FILES) {
-            setError(`You can upload a maximum of ${MAX_FILES} reference images`);
+            setError(`Sie können maximal ${MAX_FILES} referenz Bilder auswählen`);
             e.target.value = '';
 
             return;

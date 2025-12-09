@@ -3,14 +3,8 @@ import { Inter } from "next/font/google";
 import { createClient } from '@/utils/supabase/server'
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { Suspense } from "react";
-import { AppProvider } from "../../contexts/AppContext";
 import { ImagesProvider } from "@/contexts/ImagesContext";
-import { GenerationProvider } from '@/contexts/GenerationContext';
-import DashboardHeaderTailwind from "@/components/dashboard/DashboardHeaderTailwind";
-import { Container } from "@/components/layout/Container";
-import CreditPurchaseModal from "@/components/dashboard/CreditPurchaseModal";
 import CreditsStatus from "@/components/dashboard/CreditsStatus";
-import { getStripePlanAction } from "@/utils/stripe/actions";
 import Loading from "./loading";
 
 const inter = Inter({ subsets: ["latin"] });

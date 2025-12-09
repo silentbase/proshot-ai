@@ -51,18 +51,22 @@ export async function GET(request: Request) {
                     user.email!,
                     user.user_metadata.full_name || user.email!.split("@")[0],
                 );
+                console.log("Stripe customer created:", stripeID);
+                
                 // Create record in DB
-                await db.insert(usersTable).values({
+                const insertResult = await db.insert(usersTable).values({
                     id: user.id,
                     name: user.user_metadata.full_name ||
                         user.email!.split("@")[0],
                     email: user.email!,
                     stripe_id: stripeID,
                 });
-                console.log("User created successfully in DB");
+                console.log("User created successfully in DB", insertResult);
             } catch (dbError) {
                 console.error("Error creating user in DB:", dbError);
-                // Continue anyway since auth is successful
+                console.error("Full error details:", JSON.stringify(dbError, null, 2));
+                // Don't continue - redirect to error page
+                return NextResponse.redirect(`${origin}/auth/error?reason=db_error`);
             }
         } else {
             console.log("User already exists in DB");

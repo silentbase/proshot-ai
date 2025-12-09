@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache";
 import {
     createStripeCustomer,
     deleteStripeCustomer,
-    getStripePlan,
     syncStripeSubscription,
 } from "@/utils/stripe/api";
 import { db } from "@/utils/db/db";
@@ -13,7 +12,6 @@ import { usersTable } from "@/utils/db/schema";
 import { eq } from "drizzle-orm";
 import { createServiceRoleClient } from "@/utils/supabase/ServiceRole";
 import {
-    getStripePlanAction,
     getStripePlanOfUserAction,
 } from "@/utils/stripe/actions";
 
