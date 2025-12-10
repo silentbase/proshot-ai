@@ -38,7 +38,7 @@ export default async function CreditsStatus() { //TODO: no credits status if not
         <>
             <span className="text-primary font-semibold tracking-tight flex items-center gap-1">
                 <span className="text-base">{currentCredits}</span>
-                <span className="text-foreground text-xs">/ {totalCredits} Credits übrig</span>
+                <span className="text-foreground text-xs">/ {totalCredits} Credits</span>
             </span>
             <div className="w-full h-4 bg-muted rounded-full border dark:border-foreground/0 border-foreground/40 overflow-hidden relative py-2 ">
                 <div

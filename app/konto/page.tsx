@@ -1,13 +1,14 @@
-import { getStripePlanAction } from "@/utils/stripe/actions";
+import { getStripePlanAction, getUserCreditsAction } from "@/utils/stripe/actions";
 import { redirect } from "next/navigation";
 import DeleteAccountButton from "./DeleteAccountButton";
 
 import EditProfileForm from "./EditProfileForm";
 import EditPlanSection from "./EditPlanSection";
 import { createClient } from "@/utils/supabase/server";
+import getCreditAmount from "@/utils/helpers/getCreditAmount";
 
 export default async function AccountPage() {
-
+    
     const supabase = createClient()
 
     const {
@@ -17,7 +18,10 @@ export default async function AccountPage() {
     if (!user) {
         redirect("/login");
     }
+  
     const plan = await getStripePlanAction()
+    const totalCredits = getCreditAmount(plan?.name!)
+    const currentCredits = await getUserCreditsAction();
 
     const { data: trackingRow, error: trackErr } = await supabase
         .from('users_table').select('name').eq('id', user.id).single()
@@ -51,7 +55,12 @@ export default async function AccountPage() {
                             </span>
 
                         ) : null}
+                         <span className="text-primary font-semibold tracking-tight flex items-center gap-1 md:hidden">
+                            <span className="text-base">{currentCredits}</span>
+                            <span className="text-foreground text-xs">/ {totalCredits} Credits</span>
+                        </span>
                     </div>
+                    
                     <EditPlanSection user={user!} name={name} plan={plan!} ></EditPlanSection>
                 </div>
             </section>

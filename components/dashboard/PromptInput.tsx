@@ -161,7 +161,7 @@ export function PromptInput({ value, onChange, placeholder, disabled, errorMsg }
                             <DropdownMenuContent
                                 align="center"
                                 side="bottom"
-                                className="w-[50vw] max-h-[50vh] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-muted-foreground/50"
+                                className="w-[80vw] sm:w-[50vw] max-h-[50vh] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-muted-foreground/50"
                                 sideOffset={5}
                             >
                                 <div className="px-2 py-1.5 text-sm font-semibold text-center border-b">

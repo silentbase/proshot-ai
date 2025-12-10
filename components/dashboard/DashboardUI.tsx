@@ -415,7 +415,7 @@ export default function DashboardUI({ authUser }: any) {
                 <div className="flex w-full">
                     
                         <main className="flex-1 flex flex-col">
-                            <div className="flex-1 p-6">
+                            <div className="flex-1 p-6 max-md:p-4">
                                 <div className="max-w-5xl mx-auto space-y-6">
                                     {/* Project Title */}
                                     {/*<Card className="card-elegant">

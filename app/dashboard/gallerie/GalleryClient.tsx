@@ -22,7 +22,7 @@ export default function GalleryClient({ initialImages }: GalleryClientProps) {
     }, [initialImages, setImages])
 
     return (
-        <main className='container-padding pr-0' onClick={e => {
+        <main className='container-padding max-md:p-3 pr-0' onClick={e => {
             e.stopPropagation();
             setMenuOpenId(null);
         }}>

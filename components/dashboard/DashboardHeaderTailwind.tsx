@@ -28,7 +28,7 @@ export default async function DashboardHeaderTailwind() {
     } : null
 
     return (
-        <header className="sticky top-0 container-left-padding container-right-padding z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <header className="sticky top-0 container-left-padding container-right-padding max-md:px-4 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container mx-auto flex h-16 items-center justify-between">
                 <div className="flex items-center gap-2">
                     {/* Mobile menu button as client component */}
@@ -36,7 +36,7 @@ export default async function DashboardHeaderTailwind() {
                         activePathname={pathname}
                     />*/}
 
-                    <Link href="/dashboard" className="flex items-center gap-2 px-3 py-2">
+                    <Link href="/dashboard" className="flex items-center gap-2 px-3 pl-0 py-2">
                         <Image src="/logo.png" alt="ProShot AI Logo" width={32} height={32} className="h-8 w-auto" priority />
                         <span className="font-bold text-lg">ProShot AI</span>
                     </Link>
@@ -71,7 +71,7 @@ export default async function DashboardHeaderTailwind() {
                     </ul>
                 </nav>*/}
 
-                <div className="flex items-center">
+                <div className="flex items-end">
                     {/* User profile dropdown as client component */}
                     <DashboardHeaderProfileDropdown />
                 </div>

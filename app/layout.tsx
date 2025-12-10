@@ -98,7 +98,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={inter.className} suppressHydrationWarning={true}>
+      <body className={inter.className} suppressHydrationWarning={true}> {/** hsould be in cookies so it can work for google auth too. reference hilfe prompts breiter machen. google auth weiterleiten --> Proshot */}
         <Toaster position="top-center"></Toaster>
         <ConditionalStripeScript />
         <AppProvider>
