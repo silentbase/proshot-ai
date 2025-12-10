@@ -8,6 +8,11 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export async function GET(request: Request) {
+    console.log("========================================");
+    console.log("CALLBACK ROUTE HIT!");
+    console.log("URL:", request.url);
+    console.log("========================================");
+    
     const supabase = createClient();
 
     const { searchParams, origin } = new URL(request.url);
@@ -35,7 +40,7 @@ export async function GET(request: Request) {
         }
 
         console.log("User authenticated:", user.email);
-
+      
         // check to see if user already exists in db
         const checkUserInDB = await db.select().from(usersTable).where(
             eq(usersTable.email, user.email!),

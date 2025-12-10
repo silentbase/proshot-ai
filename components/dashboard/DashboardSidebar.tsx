@@ -77,7 +77,7 @@ export function DashboardSidebar({ className }: SidebarProps) {
             <nav className={cn(
                 "border-border bg-card/30",
                 isHorizontal
-                    ? "w-full container-padding"
+                    ? "w-full px-4 py-3"
                     : "w-64"
             )}>
                 <div>

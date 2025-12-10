@@ -6,7 +6,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Bell, ReceiptText, User, Settings, HelpCircle, LogOut, Info } from "lucide-react"
+import { Bell, ReceiptText, User, Settings, HelpCircle, LogOut, Info, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { createClient } from '@/utils/supabase/server'
@@ -25,18 +25,47 @@ export default async function DashboardHeaderProfileDropdown() {
     // If no user, show sign-in button
     if (!user) {
         return (
-            <div className="flex gap-2">
-                <Link href="/login">
-                    <Button variant="default" size="sm">
-                        Anmelden
-                    </Button>
-                </Link>
-                <Link href="/signup">
-                    <Button variant="secondary" size="sm">
-                        Registrieren
-                    </Button>
-                </Link>
-            </div>
+            <>
+                {/* Desktop: Show both buttons */}
+                <div className="hidden sm:flex gap-2">
+                    <Link href="/login">
+                        <Button variant="default" size="sm">
+                            Anmelden
+                        </Button>
+                    </Link>
+                    <Link href="/signup">
+                        <Button variant="secondary" size="sm">
+                            Registrieren
+                        </Button>
+                    </Link>
+                </div>
+
+                {/* Mobile: Show burger menu */}
+                <div className="sm:hidden">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <Menu className="h-5 w-5" />
+                                <span className="sr-only">Menü öffnen</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-48 sm:hidden" align="end" >
+                            <Link href="/login">
+                                <DropdownMenuItem>
+                                    <User className="mr-2 h-4 w-4" />
+                                    <span>Anmelden</span>
+                                </DropdownMenuItem>
+                            </Link>
+                            <Link href="/signup">
+                                <DropdownMenuItem>
+                                    <User className="mr-2 h-4 w-4" />
+                                    <span>Registrieren</span>
+                                </DropdownMenuItem>
+                            </Link>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            </>
         )
     }
 

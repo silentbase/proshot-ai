@@ -413,7 +413,7 @@ export default function DashboardUI({ authUser }: any) {
         <main>
             <div className="w-full bg-muted/30">
                 <div className="flex w-full">
-                    <div className="flex-1 flex">
+                    
                         <main className="flex-1 flex flex-col">
                             <div className="flex-1 p-6">
                                 <div className="max-w-5xl mx-auto space-y-6">
@@ -597,7 +597,7 @@ export default function DashboardUI({ authUser }: any) {
                         </div>*/}
                     </div>
                 </div>
-            </div>
+        
 
             {/* Lightbox */}
             {lightboxOpen && (
