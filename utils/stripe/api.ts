@@ -149,7 +149,7 @@ export async function createStripeCheckoutSession(
             price: priceId,
             quantity: 1,
         }],
-        success_url: `${process.env.NEXT_PUBLIC_WEBSITE_URL}/dashboard`,
+        success_url: `${process.env.NEXT_PUBLIC_WEBSITE_URL}/subscribe/success`,
         cancel_url: `${process.env.NEXT_PUBLIC_WEBSITE_URL}/dashboard`,
     });
 

@@ -10,6 +10,7 @@ import type { StripeProduct } from '@/utils/stripe/api';
 import getCreditAmount from '@/utils/helpers/getCreditAmount';
 import useAppContext from '@/contexts/AppContext';
 import { useRouter } from 'next/navigation';
+import { IS_PRODUCTION } from '@/utils/env';
 
 export default function CreditPurchaseModal() {
     const router = useRouter()
@@ -21,7 +22,6 @@ export default function CreditPurchaseModal() {
     const [maxCredits, setMaxCredits] = useState<number>(0);
     const [creditPackages, setcreditPackages] = useState<StripeProduct[]>([]);
 
-    const IS_PRODUCTION = process.env.NEXT_PUBLIC_ENV === "production";
     const popular = IS_PRODUCTION ? "Standart" : "Standart-Test"
 
     const upgrade = (pkg: any) => {

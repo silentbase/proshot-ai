@@ -1,6 +1,5 @@
 import { CreditAmount } from "../Enums";
-
-const IS_PRODUCTION = process.env.NEXT_PUBLIC_ENV === "production";
+import { IS_PRODUCTION } from "../env";
 
 
 const getCreditAmount = (plan: string | null) => {
