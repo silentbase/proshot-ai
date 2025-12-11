@@ -62,12 +62,12 @@ export function ActionBar({
                     </div>
 
                     {/* Main Actions */}
-                    <div className="flex items-center gap-3">
+                    <div className={`flex items-center gap-3 ${status === "generating" ? 'hidden' : ''}`}>
                         <Button
                             size="lg"
                             onClick={onGenerate}
                             disabled={!canGenerate || status === "generating"}
-                            className={`px-8 shimmer-on-hover" ${status === "generating" ? 'hidden' : ''}`}
+                            className={"px-8 shimmer-on-hover" }
                         >
                             {status === "generating" ? (
                                 <>

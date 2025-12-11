@@ -109,14 +109,18 @@ export default function DashboardUI({ authUser }: any) {
 
     const startGeneration = async () => {
 
+        setGenerationStatus("generating");
+
         const { data, error } = await supabase.auth.getUser()
         if (error || !data?.user) {
+            setGenerationStatus('error')
             router.push('/login')
             return
         }
 
         const sufficienthCredits = await checkCredits(1)
         if (!sufficienthCredits) {
+            setGenerationStatus('error')
             toast.error("Nicht genügend Credits")
             return
         }
@@ -126,7 +130,6 @@ export default function DashboardUI({ authUser }: any) {
             return;
         }
 
-        setGenerationStatus("generating");
 
         try {
             setIsUploading(true);
