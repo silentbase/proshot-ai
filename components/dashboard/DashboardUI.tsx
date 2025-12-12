@@ -18,6 +18,7 @@ import { checkCredits } from '@/utils/stripe/actions';
 import { useRouter } from 'next/navigation';
 import NextImage from 'next/image';
 import Image from 'next/image';
+import { useCredits } from '@/utils/stripe/api';
 
 export default function DashboardUI({ authUser }: any) {
     const supabase = createClient();
@@ -118,7 +119,9 @@ export default function DashboardUI({ authUser }: any) {
             return
         }
 
-        const sufficienthCredits = await checkCredits(1)
+        let usedCredits = settings.numberOfImages
+        const sufficienthCredits = await checkCredits(usedCredits)
+        
         if (!sufficienthCredits) {
             setGenerationStatus('error')
             toast.error("Nicht genügend Credits")
@@ -243,24 +246,6 @@ export default function DashboardUI({ authUser }: any) {
                 .select()
                 .single();
 
-            let usedCredits = 1
-            switch (settings.numberOfImages) {
-                case 1:
-                    usedCredits = 1
-                    break;
-                case 2:
-                    usedCredits = 2
-                    break;
-                case 3:
-                    usedCredits = 3
-                    break;
-                case 4:
-                    usedCredits = 4
-                    break;
-                default:
-                    usedCredits = 1
-                    break;
-            }
 
             await spendCredits(usedCredits)
 
