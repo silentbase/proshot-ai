@@ -8,10 +8,6 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export async function GET(request: Request) {
-    console.log("========================================");
-    console.log("CALLBACK ROUTE HIT!");
-    console.log("URL:", request.url);
-    console.log("========================================");
     
     const supabase = createClient();
 

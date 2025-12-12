@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: false,
+    // Optimize for faster loads
+    compress: true,
+    poweredByHeader: false,
     images: {
         remotePatterns: [
             {

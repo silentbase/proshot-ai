@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { createClient } from '@/utils/supabase/server'
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { Suspense } from "react";
 import { ImagesProvider } from "@/contexts/ImagesContext";
@@ -20,21 +19,6 @@ export default async function DashboardLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    // Check if user has plan selected. If not redirect to subscibe
-    const supabase = createClient()
-
-    const {
-        data: { user },
-    } = await supabase.auth.getUser()
-
-    // check user plan in db
-    //const plan = await getStripePlanAction()
-    /*const checkUserInDB = await db.select().from(usersTable).where(eq(usersTable.email, user!.email!))
-    if (checkUserInDB[0].plan === "none") {
-        console.log("User has no plan selected")
-        return redirect('/subscribe')
-    }*/
-
     return (
         <Suspense fallback={<Loading />}>
             <ImagesProvider>

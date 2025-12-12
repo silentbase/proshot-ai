@@ -121,7 +121,7 @@ export default function DashboardUI({ authUser }: any) {
 
         let usedCredits = settings.numberOfImages
         const sufficienthCredits = await checkCredits(usedCredits)
-        
+
         if (!sufficienthCredits) {
             setGenerationStatus('error')
             toast.error("Nicht genügend Credits")
@@ -344,7 +344,6 @@ export default function DashboardUI({ authUser }: any) {
 
             if (error) throw error;
 
-            console.log("Stored at:", data.path);
             return data.path; // Just return the path string
         });
 
