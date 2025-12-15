@@ -32,6 +32,7 @@ const CATEGORY_INFO: Record<CookieCategory, CategoryInfo> = {
 
 export default function CookieConsent() {
     const [showBanner, setShowBanner] = useState(false)
+    const [showSettings, setShowSettings] = useState(false)
     const [preferences, setPreferences] = useState<Record<string, boolean>>({ essential: true })
     const [availableCategories, setAvailableCategories] = useState<CookieCategory[]>(['essential'])
     const { scripts, loading, loadScriptsBasedOnConsent } = useDynamicScripts()
@@ -58,7 +59,7 @@ export default function CookieConsent() {
             const initialPrefs: Record<string, boolean> = { essential: true }
             categories.forEach(cat => {
                 if (cat !== 'essential' && !(cat in initialPrefs)) {
-                    initialPrefs[cat] = false
+                    initialPrefs[cat] = true
                 }
             })
             setPreferences(initialPrefs)
@@ -82,7 +83,9 @@ export default function CookieConsent() {
     const handleSavePreferences = () => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences))
         loadConsentedScripts(preferences)
+        updateGoogleConsent(preferences)
         setShowBanner(false)
+        setShowSettings(false)
     }
 
     const handleAcceptAll = () => {
@@ -92,7 +95,9 @@ export default function CookieConsent() {
         })
         localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs))
         loadConsentedScripts(prefs)
+        updateGoogleConsent(prefs)
         setShowBanner(false)
+        setShowSettings(false)
     }
 
     const handleRejectAll = () => {
@@ -104,7 +109,22 @@ export default function CookieConsent() {
         })
         localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs))
         loadConsentedScripts(prefs)
+        updateGoogleConsent(prefs)
         setShowBanner(false)
+        setShowSettings(false)
+    }
+
+    const updateGoogleConsent = (prefs: Record<string, boolean>) => {
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+            const gtag = (window as any).gtag
+            
+            gtag('consent', 'update', {
+                'ad_storage': prefs.marketing ? 'granted' : 'denied',
+                'ad_user_data': prefs.marketing ? 'granted' : 'denied',
+                'ad_personalization': prefs.marketing ? 'granted' : 'denied',
+                'analytics_storage': prefs.analytics ? 'granted' : 'denied'
+            })
+        }
     }
 
     const togglePreference = (category: string) => {
@@ -115,6 +135,94 @@ export default function CookieConsent() {
     if (!showBanner) return null
 
     const hasOptionalCookies = availableCategories.length > 1 || (availableCategories.length === 1 && availableCategories[0] !== 'essential')
+
+    // Show settings modal if user clicked "Einstellungen ändern"
+    if (showSettings) {
+        return (
+            <div className="fixed bottom-4 right-4 z-50 w-[400px] max-w-[calc(100vw-2rem)]">
+                <div className="bg-background border border-border rounded-lg shadow-lg p-6 relative">
+                    <button
+                        onClick={() => setShowSettings(false)}
+                        className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+                        aria-label="Zurück"
+                    >
+                        <X className="h-4 w-4" />
+                    </button>
+
+                    <div className="mb-4">
+                        <h3 className="text-lg font-semibold mb-2">🍪 Cookie-Einstellungen</h3>
+                        <p className="text-sm text-muted-foreground">
+                            Wir nutzen Cookies, um Ihre Erfahrung zu verbessern.{' '}
+                            <Link href="/cookie-policy" className="underline hover:text-primary">
+                                Mehr erfahren
+                            </Link>
+                        </p>
+                    </div>
+
+                    <div className="space-y-4 mb-6">
+                        {availableCategories.map((category) => {
+                            const info = CATEGORY_INFO[category]
+                            const isEssential = category === 'essential'
+                            const isEnabled = preferences[category] ?? false
+
+                            return (
+                                <div key={category} className="flex items-center justify-between">
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium">{info.label}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {info.description}
+                                        </p>
+                                    </div>
+                                    {isEssential ? (
+                                        <div className="relative inline-block w-12 h-6 ml-4">
+                                            <input
+                                                type="checkbox"
+                                                checked={true}
+                                                disabled
+                                                className="sr-only"
+                                            />
+                                            <div className="w-12 h-6 bg-primary rounded-full cursor-not-allowed opacity-50"></div>
+                                            <div className="absolute left-6 top-0.5 w-5 h-5 bg-white rounded-full transition-transform"></div>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => togglePreference(category)}
+                                            className="relative inline-block w-12 h-6 ml-4"
+                                            role="switch"
+                                            aria-checked={isEnabled}
+                                        >
+                                            <div
+                                                className={`w-12 h-6 rounded-full transition-colors ${isEnabled ? 'bg-primary' : 'bg-muted'
+                                                    }`}
+                                            ></div>
+                                            <div
+                                                className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${isEnabled ? 'left-6' : 'left-0.5'
+                                                    }`}
+                                            ></div>
+                                        </button>
+                                    )}
+                                </div>
+                            )
+                        })}
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                        <Button onClick={handleSavePreferences} className="w-full">
+                            Auswahl speichern
+                        </Button>
+                        <div className="flex gap-2">
+                            <Button onClick={handleRejectAll} variant="outline" className="flex-1">
+                                Alle ablehnen
+                            </Button>
+                            <Button onClick={handleAcceptAll} variant="outline" className="flex-1">
+                                Alle akzeptieren
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     // Simple notice for essential-only cookies
     if (!hasOptionalCookies) {
@@ -147,7 +255,7 @@ export default function CookieConsent() {
         )
     }
 
-    // Full preference UI for multiple cookie types
+    // Initial banner without cookie selection
     return (
         <div className="fixed bottom-4 right-4 z-50 w-[400px] max-w-[calc(100vw-2rem)]">
             <div className="bg-background border border-border rounded-lg shadow-lg p-6 relative">
@@ -160,7 +268,7 @@ export default function CookieConsent() {
                 </button>
 
                 <div className="mb-4">
-                    <h3 className="text-lg font-semibold mb-2">🍪 Cookie-Einstellungen</h3>
+                    <h3 className="text-lg font-semibold mb-2">🍪 Cookie-Hinweis</h3>
                     <p className="text-sm text-muted-foreground">
                         Wir nutzen Cookies, um Ihre Erfahrung zu verbessern.{' '}
                         <Link href="/cookie-policy" className="underline hover:text-primary">
@@ -169,63 +277,14 @@ export default function CookieConsent() {
                     </p>
                 </div>
 
-                <div className="space-y-4 mb-6">
-                    {availableCategories.map((category) => {
-                        const info = CATEGORY_INFO[category]
-                        const isEssential = category === 'essential'
-                        const isEnabled = preferences[category] ?? false
-
-                        return (
-                            <div key={category} className="flex items-center justify-between">
-                                <div className="flex-1">
-                                    <p className="text-sm font-medium">{info.label}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                        {info.description}
-                                    </p>
-                                </div>
-                                {isEssential ? (
-                                    <div className="relative inline-block w-12 h-6 ml-4">
-                                        <input
-                                            type="checkbox"
-                                            checked={true}
-                                            disabled
-                                            className="sr-only"
-                                        />
-                                        <div className="w-12 h-6 bg-primary rounded-full cursor-not-allowed opacity-50"></div>
-                                        <div className="absolute left-6 top-0.5 w-5 h-5 bg-white rounded-full transition-transform"></div>
-                                    </div>
-                                ) : (
-                                    <button
-                                        onClick={() => togglePreference(category)}
-                                        className="relative inline-block w-12 h-6 ml-4"
-                                        role="switch"
-                                        aria-checked={isEnabled}
-                                    >
-                                        <div
-                                            className={`w-12 h-6 rounded-full transition-colors ${isEnabled ? 'bg-primary' : 'bg-muted'
-                                                }`}
-                                        ></div>
-                                        <div
-                                            className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${isEnabled ? 'left-6' : 'left-0.5'
-                                                }`}
-                                        ></div>
-                                    </button>
-                                )}
-                            </div>
-                        )
-                    })}
-                </div>
-
                 <div className="flex flex-col gap-2">
-                    <Button onClick={handleSavePreferences} className="w-full">
-                        Auswahl speichern
+                    <Button onClick={handleAcceptAll} className="w-full">
+                        Alle akzeptieren
                     </Button>
                     <div className="flex gap-2">
-                        <Button onClick={handleRejectAll} variant="outline" className="flex-1">
-                            Alle ablehnen
-                        </Button>
-                        <Button onClick={handleAcceptAll} variant="outline" className="flex-1">
-                            Alle akzeptieren
+                      
+                        <Button onClick={() => setShowSettings(true)} variant="outline" className="flex-1">
+                            Einstellungen ändern
                         </Button>
                     </div>
                 </div>

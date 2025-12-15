@@ -71,6 +71,31 @@ export default function RootLayout({
   return (
     <html lang="de" className="theme-purple dark">
       <head>
+        {/* Google Tag with Consent Mode v2 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              
+              // Set default consent to denied
+              gtag('consent', 'default', {
+                'ad_storage': 'denied',
+                'ad_user_data': 'denied',
+                'ad_personalization': 'denied',
+                'analytics_storage': 'denied'
+              });
+              
+              gtag('js', new Date());
+              gtag('config', 'AW-17797001586');
+            `,
+          }}
+        />
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=AW-17797001586"
+        />
+        
         {/* Structured Data for SEO */}
         <script
           type="application/ld+json"
