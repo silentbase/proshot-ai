@@ -4,10 +4,21 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from "@/components/ui/button"
 import { CircleCheckBig } from "lucide-react"
+import { redirect } from 'next/navigation'
+import Script from 'next/script'
 
-export default async function SubscribeSuccess() {
+export default async function SubscribeSuccess({
+    searchParams,
+}: {
+    searchParams: { session_id?: string }
+}) {
+    // Redirect if no session_id (direct access without checkout)
+    if (!searchParams.session_id) {
+        redirect('/dashboard')
+    }
 
     return (
+        <>
         <div className="flex items-center justify-center bg-muted min-h-[90vh]">
             <Card className="w-[350px] mx-auto">
                 <CardHeader className="space-y-1">
@@ -23,7 +34,7 @@ export default async function SubscribeSuccess() {
                     </Button>
                 </CardFooter>
             </Card>
-        </div >
-
+        </div>
+        </>
     )
 }
